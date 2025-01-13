@@ -1,0 +1,71 @@
+services:
+  dump1090-fa:
+    image: pi-flightradar
+    pull_policy: never
+    privileged: true
+    build:
+      context: .
+    restart: always
+    ports:
+      - 3780:8080
+    env_file: ./dump1090.env
+    command:
+      - sh
+      - -c
+      - |
+        lighttpd -f /etc/lighttpd/lighttpd.conf
+        dump1090-fa --quiet --net --write-json /run/dump1090-fa  --lat $$LAT --lon $$LON --json-location-accuracy 2
+    tmpfs:
+        - /run/dump1090-fa
+  piaware:
+    image: pi-flightradar
+    pull_policy: never
+    build:
+      context: .
+    depends_on:
+        - dump1090-fa
+    restart: always
+    env_file: ./piaware.env
+    command:
+      - sh
+      - -c
+      - |
+        piaware-config allow-auto-updates no
+        piaware-config allow-manual-updates no
+        piaware-config receiver-host dump1090-fa
+        piaware-config receiver-port 30005
+        piaware-config receiver-type other
+        piaware-config allow-mlat yes
+        piaware-config use-gpsd no
+        piaware-config feeder-id $$FLIGHTAWARE_FEEDER_ID
+
+        piaware -debug
+
+  fr24feed:
+    image: pi-flightradar
+    pull_policy: never
+    build:
+      context: .
+    depends_on:
+        - dump1090-fa
+    ports:
+        - "3781:8754"
+    restart: always
+    env_file: ./fr24feed.env
+    command:
+      - sh
+      - -c
+      - |
+        cat <<EOF >/etc/fr24feed.ini
+        receiver="avr-tcp"
+        fr24key="$$FR24KEY"
+        host="dump1090-fa:30002"
+        bs="no"
+        raw="no"
+        mlat="no"
+        mlat-without-gps="no"
+        EOF
+
+        fr24feed
+    tmpfs:
+      - /var/log/fr24feed
