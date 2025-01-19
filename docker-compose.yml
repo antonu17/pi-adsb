@@ -14,7 +14,7 @@ services:
       - -c
       - |
         lighttpd -f /etc/lighttpd/lighttpd.conf
-        dump1090-fa --net --write-json /run/dump1090-fa  --lat $$LAT --lon $$LON --json-location-accuracy 2
+        dump1090-fa --net --write-json /run/dump1090-fa --json-location-accuracy 2 --lat $$LAT --lon $$LON --mlat
     tmpfs:
         - /run/dump1090-fa
   piaware:
