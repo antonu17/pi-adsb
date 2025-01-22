@@ -14,16 +14,16 @@ services:
       - -c
       - |
         lighttpd -f /etc/lighttpd/lighttpd.conf
-        dump1090-fa --net --write-json /run/dump1090-fa --json-location-accuracy 2 --lat $$LAT --lon $$LON --mlat
+        dump1090-fa --net --write-json /run/dump1090-fa --json-location-accuracy 2 --lat $$LAT --lon $$LON
     tmpfs:
-        - /run/dump1090-fa
+      - /run/dump1090-fa
   piaware:
     image: pi-flightradar
     pull_policy: never
     build:
       context: .
     depends_on:
-        - dump1090-fa
+      - dump1090-fa
     restart: always
     env_file: ./piaware.env
     command:
@@ -35,7 +35,7 @@ services:
         piaware-config receiver-host dump1090-fa
         piaware-config receiver-port 30005
         piaware-config receiver-type other
-        piaware-config allow-mlat yes
+        piaware-config allow-mlat no
         piaware-config use-gpsd no
         piaware-config feeder-id $$FLIGHTAWARE_FEEDER_ID
 
@@ -47,9 +47,9 @@ services:
     build:
       context: .
     depends_on:
-        - dump1090-fa
+      - dump1090-fa
     ports:
-        - "3781:8754"
+      - "3781:8754"
     restart: always
     env_file: ./fr24feed.env
     command:
